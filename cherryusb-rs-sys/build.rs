@@ -43,9 +43,9 @@ fn main() {
     eprintln!("include_paths={:?}", include_paths);
 
     let mut build = Build::new();
-    add_cherryusb_class_c_files(&mut build);
-    add_all_c_files_in_dir(&mut build, "CherryUSB/core");
-    add_all_c_files_in_dir(&mut build, "CherryUSB/common");
+    add_cherryusb_class_c_files_to_cc(&mut build);
+    add_all_c_files_in_dir_to_cc(&mut build, "CherryUSB/core");
+    add_all_c_files_in_dir_to_cc(&mut build, "CherryUSB/common");
 
     build
         .include("CherryUSB/common")
@@ -90,15 +90,25 @@ fn main() {
         .include("CherryUSB/port/ohci")
         .file("CherryUSB/port/ohci/usb_hc_ohci.c");
 
-    build.flag("-Wunused-parameter").compile("cherryusb");
+    build
+        .flag("-Wno-unused-but-set-variable")
+        .flag("-Wno-unused-parameter")
+        .flag("-Wno-unused-variable")
+        .compile("cherryusb");
 
+    // Current target
     let target = env::var("TARGET").expect("Missing TARGET env var");
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let bindings = bindgen::Builder::default()
-        // TODO: Which header file should be used?
-        .header("usb_config.h")
+
+    // Add headers that need to be included in the bindings
+    let mut bindgen_builder = bindgen::Builder::default().header("usb_config.h");
+    bindgen_builder = add_all_h_files_to_bindgen(bindgen_builder, "CherryUSB/core");
+    bindgen_builder = add_all_h_files_to_bindgen(bindgen_builder, "CherryUSB/common");
+    bindgen_builder = add_all_h_files_to_bindgen(bindgen_builder, "CherryUSB/class");
+
+    // Other bindgen configurations
+    bindgen_builder = bindgen_builder
         .rustified_enum(".*")
-        .clang_arg(&format!("-I{}", &out_dir.display()))
         .derive_default(true)
         .layout_tests(false)
         .use_core()
@@ -109,6 +119,7 @@ fn main() {
             "-fvisibility=default",
             "-fshort-enums",
         ])
+        .clang_arg(&format!("-I{}", &out_dir.display()))
         .clang_arg("-ICherryUSB/core")
         .clang_arg("-ICherryUSB/common")
         .clang_arg("-ICherryUSB/port/ehci")
@@ -116,7 +127,21 @@ fn main() {
         .clang_arg("-ICherryUSB/port/fsdev")
         .clang_arg("-ICherryUSB/port/musb")
         .clang_arg("-ICherryUSB/port/ohci")
-        .clang_args(&include_paths)
+        .clang_arg("-ICherryUSB/class/audio")
+        .clang_arg("-ICherryUSB/class/cdc")
+        .clang_arg("-ICherryUSB/class/dfu")
+        .clang_arg("-ICherryUSB/class/hid")
+        .clang_arg("-ICherryUSB/class/hub")
+        .clang_arg("-ICherryUSB/class/midi")
+        .clang_arg("-ICherryUSB/class/msc")
+        .clang_arg("-ICherryUSB/class/video")
+        .clang_arg("-ICherryUSB/class/vender/net")
+        .clang_arg("-ICherryUSB/class/vender/serial")
+        .clang_arg("-ICherryUSB/class/vender/wifi")
+        .clang_args(&include_paths);
+
+    // Generate bindings
+    let bindings = bindgen_builder
         .generate()
         .expect("Unable to generate bindings");
 
@@ -125,7 +150,7 @@ fn main() {
         .expect("Can't write bindings!");
 }
 
-fn add_all_c_files_in_dir(build: &mut Build, path: impl AsRef<Path>) {
+fn add_all_c_files_in_dir_to_cc(build: &mut Build, path: impl AsRef<Path>) {
     for entry in glob::glob(path.as_ref().join("**/*.c").to_str().unwrap()).unwrap() {
         let path = entry.unwrap();
         if path.extension().and_then(|s| s.to_str()) == Some("c") {
@@ -134,17 +159,31 @@ fn add_all_c_files_in_dir(build: &mut Build, path: impl AsRef<Path>) {
     }
 }
 
-fn add_cherryusb_class_c_files(build: &mut Build) {
+fn add_cherryusb_class_c_files_to_cc(build: &mut Build) {
     // TODO: use feature gate like `msc`, `hid`, etc
-    add_all_c_files_in_dir(build, "CherryUSB/class/audio");
-    add_all_c_files_in_dir(build, "CherryUSB/class/cdc");
-    add_all_c_files_in_dir(build, "CherryUSB/class/dfu");
-    add_all_c_files_in_dir(build, "CherryUSB/class/hid");
-    add_all_c_files_in_dir(build, "CherryUSB/class/hub");
-    add_all_c_files_in_dir(build, "CherryUSB/class/midi");
-    add_all_c_files_in_dir(build, "CherryUSB/class/msc");
-    add_all_c_files_in_dir(build, "CherryUSB/class/video");
-    add_all_c_files_in_dir(build, "CherryUSB/class/vender/net");
-    add_all_c_files_in_dir(build, "CherryUSB/class/vender/serial");
-    add_all_c_files_in_dir(build, "CherryUSB/class/vender/wifi");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/audio");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/cdc");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/dfu");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/hid");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/hub");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/midi");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/msc");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/video");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/vender/net");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/vender/serial");
+    add_all_c_files_in_dir_to_cc(build, "CherryUSB/class/vender/wifi");
+}
+
+fn add_all_h_files_to_bindgen(
+    mut builder: bindgen::Builder,
+    path: impl AsRef<Path>,
+) -> bindgen::Builder {
+    for entry in glob::glob(path.as_ref().join("**/*.h").to_str().unwrap()).unwrap() {
+        let path = entry.unwrap();
+        if path.extension().and_then(|s| s.to_str()) == Some("h") {
+            builder = builder.header(path.to_path_buf().to_str().unwrap());
+        }
+    }
+
+    builder
 }
