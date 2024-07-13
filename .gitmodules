@@ -1,0 +1,3 @@
+[submodule "cherryusb-rs-sys/CherryUSB"]
+	path = cherryusb-rs-sys/CherryUSB
+	url = git@github.com:HaoboGu/CherryUSB.git

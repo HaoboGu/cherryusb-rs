@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.tfl": "plaintext",
+        "usb_log.h": "c"
+    }
+}
