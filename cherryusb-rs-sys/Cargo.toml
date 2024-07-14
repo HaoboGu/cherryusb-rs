@@ -11,7 +11,10 @@ cc = "1.0"
 glob = "0.3"
 
 [features]
-default = ["device", "ohci"]
+default = []
+# Generate libs
+generate-libs = []
+generate-bindings = []
 # Mode
 host = []
 device = []
@@ -20,6 +23,5 @@ ehci = []
 dwc2 = []
 fsdev = []
 musb = []
-ohci = ["ehci"]
 
 

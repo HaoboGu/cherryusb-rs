@@ -7,4 +7,11 @@
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::transmute_int_to_bool)]
 
+#[cfg(not(feature = "generate-bindings"))]
+include!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/src/bindings/bindings.rs"
+));
+
+#[cfg(feature = "generate-bindings")]
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));

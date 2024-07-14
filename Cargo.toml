@@ -1,6 +1,3 @@
 [workspace]
-members = [
-    "cherryusb-rs-sys",
-    "cherryusb-rs",
-]
+members = ["cherryusb-rs-sys", "cherryusb-rs"]
 resolver = "2"
