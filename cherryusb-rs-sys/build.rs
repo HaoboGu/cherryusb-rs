@@ -20,6 +20,7 @@ fn main() {
         let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
         generate_lib(&target, out_path.clone());
         generate_bindings(&target, out_path);
+        println!("cargo:rustc-link-search={}", out_path.display());
     }
 
     #[cfg(not(feature = "generate-bindings"))]
@@ -49,6 +50,8 @@ fn main() {
             }
         }
     }
+
+
 }
 
 fn add_all_c_files_in_dir_to_cc(build: &mut Build, path: impl AsRef<Path>) {
