@@ -1,20 +1,20 @@
 #![no_main]
 #![no_std]
 
+use cherryusb_rs;
 use defmt::*;
 use defmt_rtt as _;
 use embassy_executor::Spawner;
-use panic_probe as _;
 use embassy_stm32::{
     bind_interrupts,
     flash::{Blocking, Flash},
-    gpio::{AnyPin, Input, Output, Level, Speed},
+    gpio::{AnyPin, Input, Level, Output, Speed},
     peripherals::USB_OTG_HS,
     time::Hertz,
     usb_otg::{Driver, InterruptHandler},
     Config,
 };
-use cherryusb_rs;
+use panic_probe as _;
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
@@ -53,7 +53,12 @@ async fn main(_spawner: Spawner) {
     // Initialize peripherals
     let p = embassy_stm32::init(config);
 
-    info!("{}", cherryusb_rs::get_var());
+    info!("initializing!");
+    cherryusb_rs::keyboard_init(0, 0x40040000);
+    info!("initialized!");
+
+    info!("testing: {}", cherryusb_rs::keyboard_test(0));
+
 
     let mut led = Output::new(p.PD13, Level::Low, Speed::High);
     loop {

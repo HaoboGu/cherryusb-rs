@@ -19,7 +19,7 @@ fn main() {
     {
         let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
         generate_lib(&target, out_path.clone());
-        generate_bindings(&target, out_path);
+        generate_bindings(&target, out_path.clone());
         println!("cargo:rustc-link-search={}", out_path.display());
     }
 
@@ -115,6 +115,9 @@ fn generate_bindings(mut target: &str, out_path: PathBuf) {
     bindgen_builder = add_all_h_files_to_bindgen(bindgen_builder, "CherryUSB/core");
     bindgen_builder = add_all_h_files_to_bindgen(bindgen_builder, "CherryUSB/common");
     bindgen_builder = add_all_h_files_to_bindgen(bindgen_builder, "CherryUSB/class");
+
+    bindgen_builder = add_all_h_files_to_bindgen(bindgen_builder, "CherryUSB/port/dwc2");
+
 
     // Other bindgen configurations
     bindgen_builder = bindgen_builder
@@ -214,7 +217,8 @@ fn generate_lib(target: &str, out_path: PathBuf) {
     build
         .include("CherryUSB/port/dwc2")
         .file("CherryUSB/port/dwc2/usb_dc_dwc2.c")
-        .file("CherryUSB/port/dwc2/usb_hc_dwc2.c");
+        .file("CherryUSB/port/dwc2/usb_hc_dwc2.c")
+        .file("CherryUSB/port/dwc2/usb_glue_st.c");
 
     #[cfg(feature = "fsdev")]
     build

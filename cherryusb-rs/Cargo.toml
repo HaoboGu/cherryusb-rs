@@ -6,9 +6,10 @@ edition = "2021"
 [dependencies]
 cherryusb-rs-sys = { version = "0.1.0", path = "../cherryusb-rs-sys", features = [
     "device",
-    "ehci",
+    "dwc2",
 ] }
 
+usbd-hid = "0.7"
 
 [features]
 generate-bindings = ["cherryusb-rs-sys/generate-bindings"]
